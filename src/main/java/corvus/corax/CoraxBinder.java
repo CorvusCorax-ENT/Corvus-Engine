@@ -105,6 +105,12 @@ public abstract class CoraxBinder {
 
 		return this;
 	}
+	
+	public void as(Scope scope) {
+		if(describer != null) {
+			describer.scope = scope;
+		}
+	}
 
 	public CoraxBinder annotatedWith(Annotation annotationType) {
 		return this;

@@ -54,28 +54,28 @@ public class Corax {
 	private final ArrayList<CoraxProcessor> processors = new ArrayList<>();
 	private final ArrayList<CoraxBinder> binders = new ArrayList<>();
 	
-	private final CorvusConfig config;
-	
 	private Corax(CoraxBinder... binders) {
 		log.info("Initializing corvus engine 1.5.0");
 		// not sure about this
 		processors.add(new ConstructorInitializer()); // always first
-		config = new CorvusConfig();
 
 		addBinders(binders);
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T getInstance(Class<?> type) {
+	public <T> T getInstance(Class<T> type) {
 		Describer describer = binds.get(type);
-		T obj = null;
+		T obj = (T) describer.value;
 		
-		if(describer.target != null) {
-			
+		if(describer.scope == Scope.Singleton) {
 			if(describer.value == null) {
 				initialize(describer);
 				obj = (T) describer.value;
 			}
+		}
+		else if(describer.target != null) {
+			initialize(describer);
+			obj = (T) describer.value;
 		}
 		else if(describer.value instanceof Instructor) {
 			Instructor ret = (Instructor) describer.value;
@@ -237,16 +237,12 @@ public class Corax {
 		}
 	}
 	
-	/**
-	 * @return the config
-	 */
-	public CorvusConfig getConfig() {
-		return config;
+	public static <T> T fetch(Class<T> type) {
+		return instance.getInstance(type);
 	}
 	
-	
-	public static CorvusConfig Config() {
-		return instance.config;
+	public static void processMembers(Object object) {
+		instance.process(new Describer(null, object.getClass(), object.getClass(), Scope.Default));
 	}
 	
 	public static synchronized Corax Install(CoraxBinder... binders) {

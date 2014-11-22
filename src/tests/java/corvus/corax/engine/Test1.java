@@ -37,9 +37,10 @@ import corvus.corax.annotations.Inject;
  */
 public class Test1 implements Itest1 {
 
+	static int l = 0;
 	@Inject
 	public Test1() {
-		System.out.println("Lol");
+		System.out.println("Lol "+(++l));
 	}
 
 	@Override

@@ -41,5 +41,7 @@ public class Main {
 		Corax corax = Corax.Install(new CoraxTT());
 		Itest1 lol = corax.getInstance(Itest1.class);
 		lol.test();
+		
+		Corax.fetch(Itest1.class).test();
 	}
 }
