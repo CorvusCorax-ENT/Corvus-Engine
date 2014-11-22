@@ -27,25 +27,19 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package corvus.corax.engine;
+package corvus.corax.inject;
 
-import corvus.corax.inject.Inject;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Vlad
  *
  */
-public class Test1 implements Itest1 {
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.FIELD, ElementType.CONSTRUCTOR, ElementType.METHOD })
+public @interface Inject {
 
-	static int l = 0;
-	
-	@Inject
-	public Test1() {
-		System.out.println("Lol "+(++l));
-	}
-
-	@Override
-	public void test() {
-		System.out.println("Hello!");
-	}
 }

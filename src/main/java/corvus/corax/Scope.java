@@ -35,5 +35,6 @@ package corvus.corax;
  */
 public enum Scope {
 	Singleton,
+	EagerSingleton,
 	Default
 }

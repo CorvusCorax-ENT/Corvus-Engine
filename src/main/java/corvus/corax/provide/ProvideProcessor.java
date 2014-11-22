@@ -27,25 +27,58 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package corvus.corax.engine;
+package corvus.corax.provide;
 
-import corvus.corax.inject.Inject;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import corvus.corax.Corax;
+import corvus.corax.CoraxDependency.MemberType;
+import corvus.corax.CoraxProcessor;
+import corvus.corax.Describer;
+import corvus.corax.util.Tools;
 
 /**
  * @author Vlad
  *
  */
-public class Test1 implements Itest1 {
-
-	static int l = 0;
+public class ProvideProcessor implements CoraxProcessor {
+	private static final Logger log = Logger.getLogger(ProvideProcessor.class.getName());
 	
-	@Inject
-	public Test1() {
-		System.out.println("Lol "+(++l));
+	@Override
+	public void process(Describer describer, Corax corax) {
+		try { // Provide annotations
+			
+			Object obj = describer.value;
+			Field[] fields = Tools.getFieldsWithAnnotation(Provide.class, obj .getClass());
+			
+			for(Field field : fields) {
+				corax.addDependency(field.getType(), MemberType.Field, obj, field);
+			}
+			
+			Method[] meths = Tools.getMethodsWithAnnotation(Provide.class, obj.getClass());
+			
+			for (Method meth : meths) {
+				
+				if(meth.getReturnType() != Void.TYPE)
+					corax.addDependency(meth.getReturnType(), MemberType.Method, obj, meth);
+				else {
+					meth.invoke(obj);
+					log.log(Level.WARNING, "Invalid provider annotation placement!", new RuntimeException());
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			log.log(Level.SEVERE, "Faild processing Provider annotations.", e);
+		}
 	}
 
 	@Override
-	public void test() {
-		System.out.println("Hello!");
+	public boolean isInitializer() {
+		return false;
 	}
+
 }

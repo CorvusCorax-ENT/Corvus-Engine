@@ -42,7 +42,7 @@ public abstract class CoraxBinder {
 	
 	private Describer describer;
 	
-	protected abstract void bind(Corax corax);
+	protected abstract void build(Corax corax);
 
 	protected void clean() {
 		describers.clear();
@@ -52,7 +52,7 @@ public abstract class CoraxBinder {
 	protected final void begin(Corax corax) {
 		describers = new ArrayList<Describer>();
 		describer = null;
-		bind(corax);
+		build(corax);
 		flush(corax);
 	}
 	

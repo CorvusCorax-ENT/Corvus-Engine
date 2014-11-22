@@ -27,25 +27,67 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package corvus.corax.engine;
+package corvus.corax.inject;
 
-import corvus.corax.inject.Inject;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import corvus.corax.Corax;
+import corvus.corax.CoraxProcessor;
+import corvus.corax.Describer;
+import corvus.corax.util.Tools;
 
 /**
  * @author Vlad
  *
  */
-public class Test1 implements Itest1 {
-
-	static int l = 0;
+public class InjectProcessor implements CoraxProcessor {
+	private static final Logger log = Logger.getLogger(InjectProcessor.class.getName());
 	
-	@Inject
-	public Test1() {
-		System.out.println("Lol "+(++l));
+	@Override
+	public void process(Describer describer, Corax corax) {
+		try { // Inject annotations
+			Object obj = describer.value;
+			
+			Field[] fields = Tools.getFieldsWithAnnotation(Inject.class, obj.getClass());
+			
+			for(Field field : fields) {
+				Object dependancy = corax.getDependency(field.getType());
+				
+				if(dependancy != null) { // injectzor
+					field.set(obj, dependancy);
+				} // TODO: Maybe a warning for nulls ?
+			}
+			
+			Method[] meths = Tools.getMethodsWithAnnotation(Inject.class, obj.getClass());
+			
+			for(Method meth : meths) {
+				
+				Class<?>[] types = meth.getParameterTypes();
+				Object[] rezult = new Object[types.length];
+					
+				for (int i = 0; i < types.length; i++) {
+					
+					Class<?> type = types[i];
+					Object dependancy = corax.getDependency(type);
+					
+					// Atm we include nulls also, unlike fields some methods might read a null
+					rezult[i] = dependancy;
+				}
+				
+				meth.invoke(obj, rezult);
+			}
+		}
+		catch (Exception e) {
+			log.log(Level.SEVERE, "Faild processing Injection annotations.", e);
+		}
 	}
 
 	@Override
-	public void test() {
-		System.out.println("Hello!");
+	public boolean isInitializer() {
+		return false;
 	}
+
 }

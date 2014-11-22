@@ -27,25 +27,68 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package corvus.corax.engine;
+package corvus.corax.initialize;
 
+import java.lang.reflect.Constructor;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import corvus.corax.Corax;
+import corvus.corax.CoraxProcessor;
+import corvus.corax.Describer;
 import corvus.corax.inject.Inject;
 
 /**
  * @author Vlad
  *
  */
-public class Test1 implements Itest1 {
+public class ConstructorInitializer implements CoraxProcessor {
 
-	static int l = 0;
+	private static final Logger log = Logger.getLogger(ConstructorInitializer.class.getName());
 	
-	@Inject
-	public Test1() {
-		System.out.println("Lol "+(++l));
+	@Override
+	public void process(Describer describer, Corax engine) {
+		Class<?> target = describer.target;
+		
+		try {
+			Constructor<?>[] cons = target.getDeclaredConstructors();
+
+			int constructors = 0;
+			Constructor<?> use = null, def = null;
+			for (int i = 0; i < cons.length; i++) {
+				Constructor<?> con = cons[i];
+				
+				if(con.isAnnotationPresent(Inject.class)) {
+					if(con.getParameterTypes().length == 0)
+						def = con;
+
+					use = con;
+					constructors++;
+				}
+			}
+			
+			if(constructors > 1) {
+				if(def != null) {
+					log.warning("Multiple constructors with inject annotations in class["+target.getSimpleName()+"], using paramitereless constructor.");
+					use = def;
+				}
+				else {
+					log.log(Level.WARNING, "Multiple constructors with inject annotations in class["+target.getSimpleName()+"]. No solution found!", new RuntimeException("No fitting constructo!"));
+					return;
+				}
+			}
+			
+			if (use != null) {// else try on another
+				describer.value = use.newInstance(engine.getDependencies(use.getParameterTypes()));
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
-	public void test() {
-		System.out.println("Hello!");
+	public boolean isInitializer() {
+		return true;
 	}
 }

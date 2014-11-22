@@ -35,8 +35,9 @@ import java.util.HashMap;
 import java.util.logging.Logger;
 
 import corvus.corax.CoraxDependency.MemberType;
-import corvus.corax.processing.ConstructorInitializer;
-import corvus.corax.processing.CoraxProcessor;
+import corvus.corax.initialize.ConstructorInitializer;
+import corvus.corax.inject.InjectProcessor;
+import corvus.corax.provide.ProvideProcessor;
 
 /**
  * @author Vlad Ravenholm
@@ -58,6 +59,9 @@ public class Corax {
 		log.info("Initializing corvus engine 1.5.0");
 		// not sure about this
 		processors.add(new ConstructorInitializer()); // always first
+
+		processors.add(new InjectProcessor());
+		processors.add(new ProvideProcessor());
 
 		addBinders(binders);
 	}

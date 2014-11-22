@@ -27,25 +27,14 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package corvus.corax.engine;
+package corvus.corax;
 
-import corvus.corax.inject.Inject;
+
 
 /**
  * @author Vlad
- *
  */
-public class Test1 implements Itest1 {
-
-	static int l = 0;
-	
-	@Inject
-	public Test1() {
-		System.out.println("Lol "+(++l));
-	}
-
-	@Override
-	public void test() {
-		System.out.println("Hello!");
-	}
+public interface CoraxProcessor {
+	public void process(Describer describer, Corax corax);
+	public boolean isInitializer();
 }

@@ -39,7 +39,7 @@ import corvus.corax.CoraxBinder;
 public class CoraxTT extends CoraxBinder {
 
 	@Override
-	protected void bind(Corax corax) {
+	protected void build(Corax corax) {
 		bind(Itest1.class).to(Test1.class);
 	}
 	
