@@ -63,4 +63,8 @@ public class Describer {
 		return key != null && (target != null || value != null);
 	}
 
+	public void clean() {
+		value = key = target = null;
+		scope = null;
+	}
 }

@@ -27,58 +27,23 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package corvus.corax;
+package corvus.corax.config;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.Properties;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * @author Vlad
- *
+ * @author Seth
  */
-public class CorvusConfig {
-	private HashMap<String, Object> properties = new HashMap<>();
-	public static File WorkingDir = new File(".");
+@Target({ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Config {
+
+	String key();
+	String value();
 	
-	public void load(String path, String... paths) {
-		try {
-			load(new FileInputStream(new File(WorkingDir, path)));
-			
-			for (int i = 0; i < paths.length; i++) {
-				load(new FileInputStream(new File(WorkingDir, paths[i])));
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public void load(InputStream... streams) {
-		Properties props = new Properties();
-		for (int i = 0; i < streams.length; i++) {
-			try (InputStream io = streams[0]) {
-				props.load(io);
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-			finally {
-				for (Entry<Object, Object> e : props.entrySet())
-					addProperty((String) e.getKey(), e.getValue());
-				props.clear();
-			}
-			
-		}
-	}
-	public void addProperty(String key, Object value) {
-		Object old = properties.put(key, value);
-		
-		if(old != null) {
-			// inform subscribers
-		}
-	}
+	/** Saves the field in Corvus Config, and this filed will be updated if the config is updated **/
+	boolean subscribe() default false;
 }

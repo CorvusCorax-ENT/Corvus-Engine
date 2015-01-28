@@ -32,9 +32,12 @@ package corvus.corax;
 import java.lang.reflect.Member;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import corvus.corax.CoraxDependency.MemberType;
+import corvus.corax.config.ConfigProcessor;
+import corvus.corax.config.CorvusConfig;
 import corvus.corax.initialize.ConstructorInitializer;
 import corvus.corax.inject.InjectProcessor;
 import corvus.corax.provide.ProvideProcessor;
@@ -55,46 +58,67 @@ public class Corax {
 	private final ArrayList<CoraxProcessor> processors = new ArrayList<>();
 	private final ArrayList<CoraxBinder> binders = new ArrayList<>();
 	
-	private Corax(CoraxBinder... binders) {
+	private CorvusConfig config;
+	
+	private Corax() {
 		log.info("Initializing corvus engine 1.5.0");
-		// not sure about this
+
+		//XXX not sure about this, but for now its gonna be hard coded
 		processors.add(new ConstructorInitializer()); // always first
 
+		processors.add(new ConfigProcessor());
 		processors.add(new InjectProcessor());
 		processors.add(new ProvideProcessor());
+	}
 
-		addBinders(binders);
+	/**
+	 * Adds a processor as the last element in the processor list
+	 * @param coraxProcessor
+	 */
+	public void addProcessor(CoraxProcessor coraxProcessor) {
+		if(coraxProcessor == null || processors.contains(coraxProcessor))
+			return;
+		
+		processors.add(coraxProcessor);
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T getInstance(Class<T> type) {
 		Describer describer = binds.get(type);
-		T obj = (T) describer.value;
-		
-		if(describer.scope == Scope.Singleton || describer.scope == Scope.EagerSingleton) {
-			if(describer.value == null) {
+		try {
+			T obj = (T) describer.value;
+			
+			if(describer.scope == Scope.Singleton || describer.scope == Scope.EagerSingleton) {
+				if(describer.value == null) {
+					initialize(describer);
+					obj = (T) describer.value;
+					process(describer);
+				}
+				
+				return obj;
+			}
+			else if(describer.target != null) {
 				initialize(describer);
 				obj = (T) describer.value;
 			}
+			else if(describer.value instanceof Instructor) {
+				Instructor ret = (Instructor) describer.value;
+				obj = (T) ret.design();
+			}
+			
+			if(obj == null) {
+				log.warning("Did not initialize "+type.getSimpleName()+"!");
+				return null;
+			}
+			
+			// And we're done
+			process(describer);
+			return obj;
 		}
-		else if(describer.target != null) {
-			initialize(describer);
-			obj = (T) describer.value;
+		catch(Exception e) {
+			log.log(Level.SEVERE, "Failed to initialize "+type.getSimpleName()+"!", e);
+			throw e;
 		}
-		else if(describer.value instanceof Instructor) {
-			Instructor ret = (Instructor) describer.value;
-			obj = (T) ret.design();
-		}
-		
-		if(obj == null) {
-			log.warning("Did not initialize "+type.getSimpleName()+"!");
-			return null;
-		}
-		
-		// And we're done
-		process(describer);
-		
-		return obj;
 	}
 
 	public Describer getDescriber(Class<?> type) {
@@ -195,8 +219,10 @@ public class Corax {
 	}
 	
 	public void destroy() {
-		for (int i = 0; i < binders.size(); i++)
+		for (int i = 0; i < binders.size(); i++) {
 			binders.get(i).clean();
+			removeBinder(binders.get(i));
+		}
 
 		processors.clear();
 		dependency.clear();
@@ -269,10 +295,43 @@ public class Corax {
 		if(instance != null)
 			instance.destroy();
 			
-		return instance = new Corax(binders);
+		instance = new Corax();
+		instance.addBinders(binders);
+		return instance;
 	}
 
+	public static CorvusConfig config() {
+		
+		if(instance == null) {
+			log.log(Level.WARNING, "Requested config module when Corax is not initiated.", new RuntimeException("Corax not Initiated."));
+			return null;
+		}
+		
+		if(instance.config == null)
+			instance.config = new CorvusConfig();
+		
+		return instance.config;
+	}
+	
+	public static void process(Object obj) {
+		if(instance == null) {
+			log.log(Level.WARNING, "Requested processing module when Corax is not initiated.", new RuntimeException("Corax not Initiated."));
+			return;
+		}
+		
+		if(obj instanceof Describer)
+			instance.process((Describer)obj);
+		else {
+			Describer describer = new Describer(null, obj.getClass(), obj.getClass(), Scope.Singleton);
+			describer.value = obj;
+			instance.process(describer);
+			describer.clean();
+		}
+
+	}
+	
 	public static Corax instance() {
 		return instance;
 	}
+
 }

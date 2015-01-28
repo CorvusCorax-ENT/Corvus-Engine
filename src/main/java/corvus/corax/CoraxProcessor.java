@@ -29,8 +29,6 @@
  */
 package corvus.corax;
 
-
-
 /**
  * @author Vlad
  */

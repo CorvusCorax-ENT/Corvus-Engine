@@ -27,19 +27,51 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package corvus.corax.annotations;
+package corvus.corax.config;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.reflect.Field;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import corvus.corax.Corax;
+import corvus.corax.CoraxProcessor;
+import corvus.corax.Describer;
+import corvus.corax.util.Tools;
 
 /**
  * @author Vlad
  *
  */
-@Target({ ElementType.FIELD, ElementType.PARAMETER })
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Named {
+public class ConfigProcessor implements CoraxProcessor {
+	private static final Logger log = Logger.getLogger(ConfigProcessor.class.getName());
+	
+	@Override
+	public void process(Describer describer, Corax corax) {
+		try { // Inject annotations
+			CorvusConfig config = Corax.config();
+			
+			Field[] fields = Tools.getFieldsWithAnnotation(Config.class, describer.target);
+			for(Field field : fields) {
+				
+				Config anno = field.getAnnotation(Config.class);
 
+				Object value = config.getProperty(anno.key(), Tools.parsePrimitiveTypes(field.getType(), anno.value()));
+				
+				field.set(describer.value, value);
+				//TODO Config subscribers
+//				if(anno.subscribe())
+//					config.addSubscriber(anno.key(), describer.value, field);
+			}
+			
+		}
+		catch (Exception e) {
+			log.log(Level.SEVERE, "Faild processing Config annotations.", e);
+		}
+	}
+
+	@Override
+	public boolean isInitializer() {
+		return false;
+	}
+	
 }

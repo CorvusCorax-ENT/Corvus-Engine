@@ -75,7 +75,7 @@ public abstract class CoraxBinder {
 		if(describer != null && describer.isValid())
 			describers.add(describer);
 		
-		describer = new Describer(this, key, null, Scope.Default);
+		describer = new Describer(this, key, key, Scope.Default);
 		
 		return this;
 	}
