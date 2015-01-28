@@ -52,7 +52,7 @@ public class ProvideProcessor implements CoraxProcessor {
 		try { // Provide annotations
 			
 			Object obj = describer.value;
-			Field[] fields = Tools.getFieldsWithAnnotation(Provide.class, obj .getClass());
+			Field[] fields = Tools.getFieldsWithAnnotation(Provide.class, obj.getClass());
 			
 			for(Field field : fields) {
 				corax.addDependency(field.getType(), MemberType.Field, obj, field);

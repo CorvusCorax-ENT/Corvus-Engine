@@ -58,10 +58,10 @@ public class ConstructorInitializer implements CoraxProcessor {
 			for (int i = 0; i < cons.length; i++) {
 				Constructor<?> con = cons[i];
 				
-				if(con.isAnnotationPresent(Inject.class)) {
-					if(con.getParameterTypes().length == 0)
-						def = con;
+				if(con.getParameterTypes().length == 0)
+					use = def = con;
 
+				if(con.isAnnotationPresent(Inject.class)) {
 					use = con;
 					constructors++;
 				}

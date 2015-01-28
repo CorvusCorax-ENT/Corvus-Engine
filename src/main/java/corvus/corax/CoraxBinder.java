@@ -45,7 +45,9 @@ public abstract class CoraxBinder {
 	protected abstract void build(Corax corax);
 
 	protected void clean() {
-		describers.clear();
+		if(describers != null)
+			describers.clear();
+
 		describer = null;
 	}
 	

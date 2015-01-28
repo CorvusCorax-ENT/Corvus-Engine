@@ -71,7 +71,7 @@ public class Corax {
 		Describer describer = binds.get(type);
 		T obj = (T) describer.value;
 		
-		if(describer.scope == Scope.Singleton) {
+		if(describer.scope == Scope.Singleton || describer.scope == Scope.EagerSingleton) {
 			if(describer.value == null) {
 				initialize(describer);
 				obj = (T) describer.value;
@@ -86,14 +86,27 @@ public class Corax {
 			obj = (T) ret.design();
 		}
 		
+		if(obj == null) {
+			log.warning("Did not initialize "+type.getSimpleName()+"!");
+			return null;
+		}
+		
 		// And we're done
 		process(describer);
 		
 		return obj;
 	}
-	
+
+	public Describer getDescriber(Class<?> type) {
+		Describer describer = binds.get(type);
+		return describer;
+	}
 
 	public synchronized void addBinders(CoraxBinder... binders) {
+		addBinders(true, binders);
+	}
+
+	public synchronized void addBinders(boolean saveBinder, CoraxBinder... binders) {
 		for (int i = 0; i < binders.length; i++) {
 			CoraxBinder binder = binders[i];
 			
@@ -101,7 +114,10 @@ public class Corax {
 			
 			for (int j = 0; j < binder.describers.size(); j++) {
 				Describer describer = binder.describers.get(j);
+				
 				binds.put(describer.key, describer);
+				if(describer.scope == Scope.EagerSingleton)
+					getInstance(describer.key);
 			}
 			
 			this.binders.add(binder);
@@ -254,5 +270,9 @@ public class Corax {
 			instance.destroy();
 			
 		return instance = new Corax(binders);
+	}
+
+	public static Corax instance() {
+		return instance;
 	}
 }
