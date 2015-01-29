@@ -43,6 +43,9 @@ public @interface Config {
 
 	String key();
 	String value();
+
+//	/** if default is not set, if the config key is removed the system will not unset the field **/
+//	String def() default "";
 	
 	/** Saves the field in Corvus Config, and this filed will be updated if the config is updated **/
 	boolean subscribe() default false;

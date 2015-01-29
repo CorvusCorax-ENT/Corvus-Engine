@@ -58,9 +58,9 @@ public class ConfigProcessor implements CoraxProcessor {
 				Object value = config.getProperty(anno.key(), Tools.parsePrimitiveTypes(field.getType(), anno.value()));
 				
 				field.set(describer.value, value);
-				//TODO Config subscribers
-//				if(anno.subscribe())
-//					config.addSubscriber(anno.key(), describer.value, field);
+
+				if(anno.subscribe())
+					config.addSubscriber(anno.key(), describer.value, field);
 			}
 			
 		}
