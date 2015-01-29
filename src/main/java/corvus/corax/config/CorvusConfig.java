@@ -37,8 +37,6 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import corvus.corax.util.Tools;
 
@@ -171,57 +169,5 @@ public class CorvusConfig {
 	public void addSubscriber(String key, Object parent, Field field) {
 		ConfigFieldSubscriber fs = new ConfigFieldSubscriber(field, parent);
 		getSubscribers().put(key, fs);
-	}
-
-	public class ConfigFieldSubscriber {
-		public final Field field;
-		public final Object parent;
-
-		public ConfigFieldSubscriber(Field field, Object parent) {
-			this.field = field;
-			this.parent = parent;
-		}
-
-		/**
-		 * TODO: Set to default
-		 */
-		public void unset() {
-			try {
-				if(field.get(parent) instanceof Number)
-					set(0);
-				else if(field.get(parent) instanceof Boolean)
-					set(false);
-				else
-					set(null);
-			}
-			catch(Exception e) {
-				Logger log = Logger.getLogger(getClass().getName());
-				log.log(Level.SEVERE, "Failed unsetting subscriber field["+field.getName()+"-"+parent.getClass().getSimpleName()+"]!", e);
-			}
-		}
-
-		public void set(Object value) {
-			try {
-				field.set(parent, value);
-			}
-			catch(Exception e) {
-				Logger log = Logger.getLogger(getClass().getName());
-				log.log(Level.SEVERE, "Failed setting subscriber field["+field.getName()+"-"+parent.getClass().getSimpleName()+"]!", e);
-			}
-		}
-	}
-	
-	public int lol;
-	public String lol1;
-	
-	public static void main(String[] args) throws Exception {
-		CorvusConfig ff = new CorvusConfig();
-		Class<?> type = ff.getClass();
-		
-		Field lol = type.getDeclaredField("lol");
-		Field lol1 = type.getDeclaredField("lol1");
-		
-		System.out.println("Got: "+lol.getType()+ " - " + lol1.getType());
-		System.out.println("Got: "+lol.get(ff)+ " - " + lol1.get(ff));
 	}
 }
