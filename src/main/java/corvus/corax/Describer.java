@@ -34,7 +34,7 @@ package corvus.corax;
  */
 public class Describer {
 
-	public final CoraxBinder binder;
+	public final CoraxBuilder builder;
 
 	public Class<?> key;
 	public Class<?> target;
@@ -43,14 +43,14 @@ public class Describer {
 	public Object value;
 
 	/**
-	 * @param binder
+	 * @param builder
 	 * @param key
 	 * @param target
 	 * @param scope
 	 * @param value
 	 */
-	public Describer(CoraxBinder binder, Class<?> key, Class<?> target, Scope scope) {
-		this.binder = binder;
+	public Describer(CoraxBuilder builder, Class<?> key, Class<?> target, Scope scope) {
+		this.builder = builder;
 		this.key = key;
 		this.target = target;
 		this.scope = scope;

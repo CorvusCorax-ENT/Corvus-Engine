@@ -36,14 +36,29 @@ import java.util.ArrayList;
  * @author Vlad
  *
  */
-public abstract class CoraxBinder {
+public abstract class CoraxBuilder {
 	
 	protected ArrayList<Describer> describers = new ArrayList<Describer>();
 	
 	private Describer describer;
+	private Scope defaultScope;
 	
 	protected abstract void build(Corax corax);
 
+	/**
+	 * @param defaultScope the defaultScope to set
+	 */
+	public void setDefaultScope(Scope defaultScope) {
+		this.defaultScope = defaultScope;
+	}
+	
+	/**
+	 * Clears any set default for the specific build segment
+	 */
+	public void clearDefaults() {
+		defaultScope = null;
+	}
+	
 	protected void clean() {
 		if(describers != null)
 			describers.clear();
@@ -59,6 +74,7 @@ public abstract class CoraxBinder {
 	}
 	
 	protected final void end() {
+		ready();
 		describers.clear();
 		describer = null;
 		describers = null;
@@ -71,16 +87,23 @@ public abstract class CoraxBinder {
 		}
 	}
 	
-	protected CoraxBinder bind(Class<?> key) {
-		if(describer != null && describer.isValid())
+	protected CoraxBuilder bind(Class<?> key) {
+		if(describer != null && describer.isValid()) {
+
+			if (defaultScope != null && describer.scope == null)
+				describer.scope = defaultScope;
+			else if (describer.scope == null)
+				describer.scope = Scope.Default;
+				
 			describers.add(describer);
+		}
 		
-		describer = new Describer(this, key, key, Scope.Default);
+		describer = new Describer(this, key, key, null);
 		
 		return this;
 	}
 	
-	public CoraxBinder to(Class<?> target) {
+	public CoraxBuilder to(Class<?> target) {
 		if(describer != null) {
 			
 			if(describer.key.isAssignableFrom(target))
@@ -95,13 +118,13 @@ public abstract class CoraxBinder {
 		return this;
 	}
 
-	public CoraxBinder to(Instructor instructor) {
+	public CoraxBuilder to(Instructor instructor) {
 		if(describer != null)
 			describer.value = instructor;
 		return this;
 	}
 
-	public CoraxBinder constant(Object cons) {
+	public CoraxBuilder constant(Object cons) {
 		if(describer != null && describer.key.isInstance(cons))
 			describer.value = cons;
 
@@ -114,12 +137,18 @@ public abstract class CoraxBinder {
 		}
 	}
 
-	public CoraxBinder annotatedWith(Annotation annotationType) {
+	public CoraxBuilder annotatedWith(Annotation annotationType) {
 		return this;
 	}
 
-	public CoraxBinder annotatedWith(Class<? extends Annotation> annotationType) {
+	public CoraxBuilder annotatedWith(Class<? extends Annotation> annotationType) {
 		return this;
 	}
 
+	/**
+	 * Triggered when all the bindings are done. <br>
+	 * The builder is ready for anything o/
+	 */
+	public void ready() { }
+	
 }

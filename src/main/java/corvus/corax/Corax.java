@@ -56,7 +56,7 @@ public class Corax {
 	private final HashMap<Class<?>, CoraxDependency> dependency = new HashMap<>();
 	
 	private final ArrayList<CoraxProcessor> processors = new ArrayList<>();
-	private final ArrayList<CoraxBinder> binders = new ArrayList<>();
+	private final ArrayList<CoraxBuilder> builders = new ArrayList<>();
 	
 	private CorvusConfig config;
 	
@@ -126,26 +126,26 @@ public class Corax {
 		return describer;
 	}
 
-	public synchronized void addBinders(CoraxBinder... binders) {
-		addBinders(true, binders);
+	public synchronized void addBuilders(CoraxBuilder... builders) {
+		addBuilders(true, builders);
 	}
 
-	public synchronized void addBinders(boolean saveBinder, CoraxBinder... binders) {
-		for (int i = 0; i < binders.length; i++) {
-			CoraxBinder binder = binders[i];
+	public synchronized void addBuilders(boolean saveBuilder, CoraxBuilder... builders) {
+		for (int i = 0; i < builders.length; i++) {
+			CoraxBuilder builder = builders[i];
 			
-			binder.begin(this);
+			builder.begin(this);
 			
-			for (int j = 0; j < binder.describers.size(); j++) {
-				Describer describer = binder.describers.get(j);
+			for (int j = 0; j < builder.describers.size(); j++) {
+				Describer describer = builder.describers.get(j);
 				
 				binds.put(describer.key, describer);
 				if(describer.scope == Scope.EagerSingleton)
 					getInstance(describer.key);
 			}
 			
-			this.binders.add(binder);
-			binder.end();
+			this.builders.add(builder);
+			builder.end();
 		}
 	}
 
@@ -153,12 +153,12 @@ public class Corax {
 	 * @param type
 	 * @return
 	 */
-	public CoraxBinder getBinder(Class<? extends CoraxBinder> type) {
-		for (int i = 0; i < binders.size(); i++) {
-			CoraxBinder binder = binders.get(i);
+	public CoraxBuilder getBuilder(Class<? extends CoraxBuilder> type) {
+		for (int i = 0; i < builders.size(); i++) {
+			CoraxBuilder builder = builders.get(i);
 			
-			if(type.isInstance(binder))
-				return binder;
+			if(type.isInstance(builder))
+				return builder;
 		}
 		
 		return null;
@@ -219,42 +219,42 @@ public class Corax {
 	}
 	
 	public void destroy() {
-		for (int i = 0; i < binders.size(); i++) {
-			binders.get(i).clean();
-			removeBinder(binders.get(i));
+		for (int i = 0; i < builders.size(); i++) {
+			builders.get(i).clean();
+			removeBuilder(builders.get(i));
 		}
 
 		processors.clear();
 		dependency.clear();
-		binders.clear();
+		builders.clear();
 		binds.clear();
 	}
 
 	@SuppressWarnings("unchecked")
-	public synchronized void removeBinders(Class<? extends CoraxBinder>... binders) {
-		for (int i = 0; i < binders.length; i++) {
-			Class<? extends CoraxBinder> type = binders[i];
+	public synchronized void removeBuilders(Class<? extends CoraxBuilder>... builders) {
+		for (int i = 0; i < builders.length; i++) {
+			Class<? extends CoraxBuilder> type = builders[i];
 			
-			CoraxBinder binder = getBinder(type);
+			CoraxBuilder builder = getBuilder(type);
 			
-			if(binder != null)
-				removeBinder(binder);
+			if(builder != null)
+				removeBuilder(builder);
 		}
 	}
 
-	public synchronized void removeBinders(CoraxBinder... binders) {
-		for (int i = 0; i < binders.length; i++) {
-			CoraxBinder binder = binders[i];
-			removeBinder(binder);
+	public synchronized void removeBuilders(CoraxBuilder... builders) {
+		for (int i = 0; i < builders.length; i++) {
+			CoraxBuilder builder = builders[i];
+			removeBuilder(builder);
 		}
 	}
 
-	public synchronized void removeBinder(CoraxBinder binder) {
+	public synchronized void removeBuilder(CoraxBuilder builder) {
 		ArrayList<Describer> descs = new ArrayList<>();
 		
 		// purge dependency
 		for(Describer desc : binds.values()) {
-			if(desc.binder == binder) 
+			if(desc.builder == builder) 
 				descs.add(desc);
 		}
 		
@@ -265,8 +265,8 @@ public class Corax {
 			purgeDependency(desc);
 		}
 		
-		binder.clean();
-		this.binders.remove(binder);
+		builder.clean();
+		this.builders.remove(builder);
 	}
 
 	public void purgeDependency(Describer describer) {
@@ -291,12 +291,12 @@ public class Corax {
 		instance.process(new Describer(null, object.getClass(), object.getClass(), Scope.Default));
 	}
 	
-	public static synchronized Corax Install(CoraxBinder... binders) {
+	public static synchronized Corax Install(CoraxBuilder... builders) {
 		if(instance != null)
 			instance.destroy();
 			
 		instance = new Corax();
-		instance.addBinders(binders);
+		instance.addBuilders(builders);
 		return instance;
 	}
 

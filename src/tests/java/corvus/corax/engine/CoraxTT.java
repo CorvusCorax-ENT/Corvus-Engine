@@ -30,13 +30,13 @@
 package corvus.corax.engine;
 
 import corvus.corax.Corax;
-import corvus.corax.CoraxBinder;
+import corvus.corax.CoraxBuilder;
 
 /**
  * @author Vlad
  *
  */
-public class CoraxTT extends CoraxBinder {
+public class CoraxTT extends CoraxBuilder {
 
 	@Override
 	protected void build(Corax corax) {
