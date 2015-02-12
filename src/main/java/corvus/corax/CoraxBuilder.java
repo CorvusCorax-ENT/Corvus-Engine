@@ -82,12 +82,18 @@ public abstract class CoraxBuilder {
 
 	public void flush(Corax corax) {
 		if(describer != null && !corax.isBinded(describer.key)) {
-			describers.add(describer);
+			completePreviousBind();
 			describer = null;
 		}
 	}
 	
 	protected CoraxBuilder bind(Class<?> key) {
+		completePreviousBind();
+		describer = new Describer(this, key, key, null);
+		return this;
+	}
+	
+	private void completePreviousBind() { 
 		if(describer != null && describer.isValid()) {
 
 			if (defaultScope != null && describer.scope == null)
@@ -97,10 +103,6 @@ public abstract class CoraxBuilder {
 				
 			describers.add(describer);
 		}
-		
-		describer = new Describer(this, key, key, null);
-		
-		return this;
 	}
 	
 	public CoraxBuilder to(Class<?> target) {
