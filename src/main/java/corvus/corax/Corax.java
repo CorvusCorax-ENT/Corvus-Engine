@@ -53,7 +53,7 @@ public class Corax {
 	private static Corax instance;
 	
 	private final HashMap<Class<?>, Describer> binds = new HashMap<>();
-	private final HashMap<Class<?>, CoraxDependency> dependency = new HashMap<>();
+	private final HashMap<Object, CoraxDependency> dependency = new HashMap<>();
 	
 	private final ArrayList<CoraxProcessor> processors = new ArrayList<>();
 	private final ArrayList<CoraxBuilder> builders = new ArrayList<>();
@@ -107,7 +107,7 @@ public class Corax {
 			}
 			
 			if(obj == null) {
-				log.warning("Did not initialize "+type.getSimpleName()+"!");
+				log.warning("Did not initialize "+type.getSimpleName()+" as scope "+describer.scope+"!");
 				return null;
 			}
 			
@@ -138,6 +138,12 @@ public class Corax {
 			
 			for (int j = 0; j < builder.describers.size(); j++) {
 				Describer describer = builder.describers.get(j);
+				
+				if(describer.key == null) {
+					dependency.put(describer.annotation == null ? describer.annotationType : describer.annotation,
+							new CoraxDependency(describer.value));
+					continue;
+				}
 				
 				binds.put(describer.key, describer);
 				if(describer.scope == Scope.EagerSingleton)
@@ -172,24 +178,15 @@ public class Corax {
 		dependency.put(clstype, new CoraxDependency(owner, clstype, type, member));
 	}
 	
-	public Object[] getDependencies(Class<?>... types) throws Exception {
-		ArrayList<Object> data = new ArrayList<Object>();
-
-		for (int i = 0; i < types.length; i++)
-			data.add(getDependency(getClass()));
+	public Object getDependency(Object type) throws Exception {
 		
-		return data.toArray();
-	}
-	
-	public Object getDependency(Class<?> type) throws Exception {
-		
-		if(binds.containsKey(type))
-			return getInstance(type);
+		if(binds.containsKey(type) && type instanceof Class<?>)
+			return getInstance((Class<?>) type);
 		
 		CoraxDependency dep = dependency.get(type);
 		
 		if(dep == null) {
-			log.warning("Dependency["+type.getSimpleName()+"] could not be resolved! Either the Dependency is not mapped yet, or its not at all.");
+			log.warning("Dependency["+(type instanceof Class<?> ? ((Class<?>) type).getSimpleName() : type)+"] could not be resolved! Either the Dependency is not mapped yet, or its not at all.");
 			return null;
 		}
 		
@@ -254,7 +251,7 @@ public class Corax {
 		
 		// purge dependency
 		for(Describer desc : binds.values()) {
-			if(desc.builder == builder) 
+			if(desc.builder != null && desc.builder == builder) 
 				descs.add(desc);
 		}
 		
@@ -314,6 +311,10 @@ public class Corax {
 	}
 	
 	public static void process(Object obj) {
+		process(obj, false);
+	}
+	
+	public static void process(Object obj, boolean saveNew) {
 		if(instance == null) {
 			log.log(Level.WARNING, "Requested processing module when Corax is not initiated.", new RuntimeException("Corax not Initiated."));
 			return;
@@ -325,7 +326,11 @@ public class Corax {
 			Describer describer = new Describer(null, obj.getClass(), obj.getClass(), Scope.Singleton);
 			describer.value = obj;
 			instance.process(describer);
-			describer.clean();
+			
+			if(saveNew && !instance.isBinded(describer.key))
+				instance.binds.put(describer.key, describer);
+			else
+				describer.clean();
 		}
 
 	}

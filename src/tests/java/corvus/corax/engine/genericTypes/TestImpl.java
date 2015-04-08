@@ -27,58 +27,27 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package corvus.corax.provide;
+package corvus.corax.engine.genericTypes;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import corvus.corax.Corax;
-import corvus.corax.CoraxDependency.MemberType;
-import corvus.corax.CoraxProcessor;
-import corvus.corax.Describer;
-import corvus.corax.util.ReflectUtils;
+import corvus.corax.inject.Inject;
+import corvus.corax.inject.Named;
 
 /**
- * @author Vlad
+ * @author og_ki_000
  *
  */
-public class ProvideProcessor implements CoraxProcessor {
-	private static final Logger log = Logger.getLogger(ProvideProcessor.class.getName());
+public class TestImpl implements Test {
+
+	@Inject @Named("hello")
+	private String MM;
 	
-	@Override
-	public void process(Describer describer, Corax corax) {
-		try { // Provide annotations
-			
-			Object obj = describer.value;
-			Field[] fields = ReflectUtils.getFieldsWithAnnotation(Provide.class, obj.getClass());
-			
-			for(Field field : fields) {
-				corax.addDependency(field.getType(), MemberType.Field, obj, field);
-			}
-			
-			Method[] meths = ReflectUtils.getMethodsWithAnnotation(Provide.class, obj.getClass());
-			
-			for (Method meth : meths) {
-				
-				if(meth.getReturnType() != Void.TYPE)
-					corax.addDependency(meth.getReturnType(), MemberType.Method, obj, meth);
-				else {
-					meth.invoke(obj);
-					log.log(Level.WARNING, "Invalid provider annotation placement!", new RuntimeException());
-				}
-			}
-		}
-		catch (Exception e)
-		{
-			log.log(Level.SEVERE, "Faild processing Provider annotations.", e);
-		}
+	@Inject
+	public TestImpl(MainTest test, @Named("hello") String msg) {
+		System.out.println(getClass().getSimpleName()+": I has been Createdz! got my dep? "+(test != null)+"[Dep:"+test.getMsg2()+"] msg = "+msg);
 	}
 
 	@Override
-	public boolean isInitializer() {
-		return false;
+	public void initialize(String msg) {
+		System.out.println(getClass().getSimpleName()+": I has been Initiatedzedledzed! MSG["+msg+"], MM says: "+MM);
 	}
-
 }

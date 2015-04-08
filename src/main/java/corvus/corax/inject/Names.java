@@ -27,58 +27,43 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package corvus.corax.provide;
+package corvus.corax.inject;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.lang.annotation.Annotation;
 
-import corvus.corax.Corax;
-import corvus.corax.CoraxDependency.MemberType;
-import corvus.corax.CoraxProcessor;
-import corvus.corax.Describer;
-import corvus.corax.util.ReflectUtils;
+public class Names {
 
-/**
- * @author Vlad
- *
- */
-public class ProvideProcessor implements CoraxProcessor {
-	private static final Logger log = Logger.getLogger(ProvideProcessor.class.getName());
-	
-	@Override
-	public void process(Describer describer, Corax corax) {
-		try { // Provide annotations
-			
-			Object obj = describer.value;
-			Field[] fields = ReflectUtils.getFieldsWithAnnotation(Provide.class, obj.getClass());
-			
-			for(Field field : fields) {
-				corax.addDependency(field.getType(), MemberType.Field, obj, field);
-			}
-			
-			Method[] meths = ReflectUtils.getMethodsWithAnnotation(Provide.class, obj.getClass());
-			
-			for (Method meth : meths) {
-				
-				if(meth.getReturnType() != Void.TYPE)
-					corax.addDependency(meth.getReturnType(), MemberType.Method, obj, meth);
-				else {
-					meth.invoke(obj);
-					log.log(Level.WARNING, "Invalid provider annotation placement!", new RuntimeException());
-				}
-			}
-		}
-		catch (Exception e)
-		{
-			log.log(Level.SEVERE, "Faild processing Provider annotations.", e);
-		}
+	/**
+	 * @param value
+	 * @return
+	 */
+	public static Annotation named(String value) {
+		return new NamedImpl(value);
 	}
+	
+	public static class NamedImpl implements Named {
 
-	@Override
-	public boolean isInitializer() {
-		return false;
+		private String value;
+
+		public NamedImpl(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public int hashCode() {
+			return (127 * "value".hashCode()) ^ value.hashCode();
+		}
+		
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return Named.class;
+		}
+
+		@Override
+		public String value() {
+			return value;
+		}
+		
 	}
 
 }

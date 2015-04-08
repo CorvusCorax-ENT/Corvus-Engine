@@ -28,10 +28,12 @@ public final class CoraxDependency {
 	private final Member provider;
 
 	private final MemberType type;
+	private Object value;
 	
 	public enum MemberType {
 		Field,
-		Method
+		Method,
+		Constant
 	}
 
 	public CoraxDependency(Object owner, Class<?> target, MemberType type, Member data) {
@@ -41,6 +43,15 @@ public final class CoraxDependency {
 		this.type = type;
 	}
 
+	public CoraxDependency(Object value) {
+		this.value = value;
+		
+		owner = null;
+		target = null;
+		provider = null;
+		type = MemberType.Constant;
+	}
+	
 	public Object getInstance() throws Exception {
 		
 		switch (type)
@@ -54,6 +65,9 @@ public final class CoraxDependency {
 			{
 				Method meth = (Method)provider;
 				return meth.invoke(owner);
+			}
+			case Constant: {
+				return value;
 			}
 			default:
 				break;

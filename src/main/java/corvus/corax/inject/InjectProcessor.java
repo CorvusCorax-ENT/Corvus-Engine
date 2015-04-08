@@ -29,6 +29,7 @@
  */
 package corvus.corax.inject;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.logging.Level;
@@ -37,7 +38,7 @@ import java.util.logging.Logger;
 import corvus.corax.Corax;
 import corvus.corax.CoraxProcessor;
 import corvus.corax.Describer;
-import corvus.corax.util.Tools;
+import corvus.corax.util.ReflectUtils;
 
 /**
  * @author Vlad
@@ -51,32 +52,74 @@ public class InjectProcessor implements CoraxProcessor {
 		try { // Inject annotations
 			Object obj = describer.value;
 			
-			Field[] fields = Tools.getFieldsWithAnnotation(Inject.class, obj.getClass());
+			Field[] fields = ReflectUtils.getFieldsWithAnnotation(Inject.class, obj.getClass());
 			
 			for(Field field : fields) {
-				Object dependancy = corax.getDependency(field.getType());
 				
-				if(dependancy != null) { // injectzor
-					field.set(obj, dependancy);
-				} // TODO: Maybe a warning for nulls ?
+				Annotation[] annos = field.getAnnotations();
+
+				if(annos.length > 1) {
+					for (int i = 0; i < annos.length; i++) {
+						Annotation paraAnno = annos[i];
+	
+						if(paraAnno.annotationType() == Inject.class)
+							continue;
+						
+						Object getter = paraAnno.annotationType();
+	
+						if(paraAnno instanceof Named)
+							getter = paraAnno;
+						
+						Object dep = corax.getDependency(getter);
+						if(dep != null) {
+							field.set(obj, dep);
+							break;
+						} // TODO: Maybe a warning for nulls ?
+					}
+				}
+				else {
+					Object dependancy = corax.getDependency(field.getType());
+					
+					if(dependancy != null) { // injectzor
+						field.set(obj, dependancy);
+					} // TODO: Maybe a warning for nulls ?
+				}
 			}
 			
-			Method[] meths = Tools.getMethodsWithAnnotation(Inject.class, obj.getClass());
+			Method[] meths = ReflectUtils.getMethodsWithAnnotation(Inject.class, obj.getClass(), true);
 			
 			for(Method meth : meths) {
 				
 				Class<?>[] types = meth.getParameterTypes();
 				Object[] rezult = new Object[types.length];
-					
+				Annotation[][] annons = meth.getParameterAnnotations();
+				
 				for (int i = 0; i < types.length; i++) {
 					
-					Class<?> type = types[i];
-					Object dependancy = corax.getDependency(type);
-					
-					// Atm we include nulls also, unlike fields some methods might read a null
-					rezult[i] = dependancy;
+					if(annons[i].length > 0)  {
+						Annotation[] paraAnnos = annons[i];
+						
+						for (int j = 0; j < paraAnnos.length; j++) {
+							Annotation paraAnno = paraAnnos[j];
+
+							Object getter = paraAnno.annotationType();
+
+							if(paraAnno instanceof Named)
+								getter = paraAnno;
+							
+							Object dep = corax.getDependency(getter);
+							rezult[i] = dep;
+						}
+					}
+					else {
+						Class<?> type = types[i];
+						Object dependancy = corax.getDependency(type);
+						
+						// Atm we include nulls also, unlike fields some methods might read a null
+						rezult[i] = dependancy;
+					}
 				}
-				
+
 				meth.invoke(obj, rezult);
 			}
 		}

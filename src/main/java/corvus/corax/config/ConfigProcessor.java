@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 import corvus.corax.Corax;
 import corvus.corax.CoraxProcessor;
 import corvus.corax.Describer;
+import corvus.corax.util.ReflectUtils;
 import corvus.corax.util.Tools;
 
 /**
@@ -50,7 +51,7 @@ public class ConfigProcessor implements CoraxProcessor {
 		try { // Inject annotations
 			CorvusConfig config = Corax.config();
 			
-			Field[] fields = Tools.getFieldsWithAnnotation(Config.class, describer.target);
+			Field[] fields = ReflectUtils.getFieldsWithAnnotation(Config.class, describer.target);
 			for(Field field : fields) {
 				
 				Config anno = field.getAnnotation(Config.class);

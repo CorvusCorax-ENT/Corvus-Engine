@@ -29,6 +29,8 @@
  */
 package corvus.corax;
 
+import java.lang.annotation.Annotation;
+
 /**
  * @author Vlad
  */
@@ -41,6 +43,10 @@ public class Describer {
 
 	public Scope scope;
 	public Object value;
+
+	// Direct dependency
+	public Annotation annotation;
+	public Class<? extends Annotation> annotationType;
 
 	/**
 	 * @param builder
@@ -60,7 +66,11 @@ public class Describer {
 	 * @return
 	 */
 	public boolean isValid() {
-		return key != null && (target != null || value != null);
+		if(key == null) { // constant
+			return annotation != null || annotationType != null;
+		}
+		
+		return (target != null || value != null);
 	}
 
 	public void clean() {

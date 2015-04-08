@@ -30,7 +30,11 @@
 package corvus.corax;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
 import java.util.ArrayList;
+
+import corvus.corax.annotation.Singleton;
+import corvus.corax.util.ReflectUtils;
 
 /**
  * @author Vlad
@@ -93,14 +97,24 @@ public abstract class CoraxBuilder {
 		return this;
 	}
 	
-	private void completePreviousBind() { 
+	private void completePreviousBind() {
 		if(describer != null && describer.isValid()) {
 
 			if (defaultScope != null && describer.scope == null)
 				describer.scope = defaultScope;
 			else if (describer.scope == null)
 				describer.scope = Scope.Default;
-				
+
+			try {
+				if(ReflectUtils.annotationPresent(null, Singleton.class, ElementType.TYPE, describer.key) ||
+						ReflectUtils.annotationPresent(null, Singleton.class, ElementType.TYPE, describer.target)) {
+					
+					describer.scope = Scope.Singleton;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
 			describers.add(describer);
 		}
 	}
@@ -129,6 +143,10 @@ public abstract class CoraxBuilder {
 	public CoraxBuilder constant(Object cons) {
 		if(describer != null && describer.key.isInstance(cons))
 			describer.value = cons;
+		else {
+			describer = new Describer(this, null, null, defaultScope != null ? defaultScope : Scope.Default);
+			describer.value = cons;
+		}
 
 		return this;
 	}
@@ -140,10 +158,16 @@ public abstract class CoraxBuilder {
 	}
 
 	public CoraxBuilder annotatedWith(Annotation annotationType) {
+		if(describer != null) {
+			describer.annotation = annotationType;
+		}
 		return this;
 	}
 
 	public CoraxBuilder annotatedWith(Class<? extends Annotation> annotationType) {
+		if(describer != null) {
+			describer.annotationType = annotationType;
+		}
 		return this;
 	}
 

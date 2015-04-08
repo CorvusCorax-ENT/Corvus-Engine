@@ -29,6 +29,7 @@
  */
 package corvus.corax.initialize;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,6 +38,7 @@ import corvus.corax.Corax;
 import corvus.corax.CoraxProcessor;
 import corvus.corax.Describer;
 import corvus.corax.inject.Inject;
+import corvus.corax.inject.Named;
 
 /**
  * @author Vlad
@@ -79,7 +81,37 @@ public class ConstructorInitializer implements CoraxProcessor {
 			}
 			
 			if (use != null) {// else try on another
-				describer.value = use.newInstance(engine.getDependencies(use.getParameterTypes()));
+				Class<?>[] types = use.getParameterTypes();
+				Object[] rezult = new Object[types.length];
+				Annotation[][] annons = use.getParameterAnnotations();
+				
+				for (int i = 0; i < types.length; i++) {
+					
+					if(annons[i].length > 0)  {
+						Annotation[] paraAnnos = annons[i];
+						
+						for (int j = 0; j < paraAnnos.length; j++) {
+							Annotation paraAnno = paraAnnos[j];
+
+							Object getter = paraAnno.annotationType();
+
+							if(paraAnno instanceof Named)
+								getter = paraAnno;
+							
+							Object dep = engine.getDependency(getter);
+							rezult[i] = dep;
+						}
+					}
+					else {
+						Class<?> type = types[i];
+						Object dependancy = engine.getDependency(type);
+						
+						// Atm we include nulls also, unlike fields some methods might read a null
+						rezult[i] = dependancy;
+					}
+				}
+				
+				describer.value = use.newInstance(rezult);
 			}
 		}
 		catch (Exception e) {

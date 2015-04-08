@@ -14,14 +14,8 @@
  */
 package corvus.corax.util;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-
-
 /**
- * @author Seth
+ * @author Vlad Ravenholm
  */
 public final class Tools
 {
@@ -98,61 +92,8 @@ public final class Tools
 		
 		return unTrimed;
 	}
+
 	
-	public synchronized static Field[] getFieldsWithAnnotation(Class<? extends Annotation> type, Class<?> obj) {
-		Field[] flds = obj.getDeclaredFields();
-		
-		ArrayList<Field> fields = new ArrayList<Field>();
-		
-		for (Field field : flds) {
-			
-			if(field.isAnnotationPresent(type)) {
-				field.setAccessible(true);
-				fields.add(field);
-			}
-		}
-		
-		if(obj.getSuperclass() != null) {
-			Field[] flds2 = getFieldsWithAnnotation(type, obj.getSuperclass());
-			
-			if(flds2.length > 0) {
-				for (int i = 0; i < flds2.length; i++) {
-					fields.add(flds2[i]);
-				}
-			}
-		}
-		
-		flds = fields.toArray(new Field[fields.size()]);
-		return flds;
-	}
-
-	public synchronized static Method[] getMethodsWithAnnotation(Class<? extends Annotation> type, Class<?> obj) {
-		Method[] meths = obj.getDeclaredMethods();
-		
-		ArrayList<Method> methods = new ArrayList<Method>();
-		
-		for (Method field : meths) {
-			
-			if(field.isAnnotationPresent(type)) {
-				field.setAccessible(true);
-				methods.add(field);
-			}
-		}
-		
-		if(obj.getSuperclass() != null) {
-			Method[] flds2 = getMethodsWithAnnotation(type, obj.getSuperclass());
-			
-			if(flds2.length > 0) {
-				for (int i = 0; i < flds2.length; i++) {
-					methods.add(flds2[i]);
-				}
-			}
-		}
-
-		meths = methods.toArray(new Method[methods.size()]);
-		return meths;
-	}
-
 	public static void printSection(String s)
 	{
 		s = "=[ " + s + " ]";
@@ -162,4 +103,5 @@ public final class Tools
 		}
 		System.out.println(s);
 	}
+
 }
