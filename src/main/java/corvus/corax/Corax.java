@@ -217,7 +217,6 @@ public class Corax {
 	
 	public void destroy() {
 		for (int i = 0; i < builders.size(); i++) {
-			builders.get(i).clean();
 			removeBuilder(builders.get(i));
 		}
 
@@ -262,8 +261,23 @@ public class Corax {
 			purgeDependency(desc);
 		}
 		
-		builder.clean();
+		for (int i = 0; i < builder.describers.size(); i++) {
+			Describer des = builder.describers.get(i);
+			
+			if(des.key != null)
+				continue;
+			else if(des.annotation != null) {
+				dependency.remove(des.annotation);
+			}
+			else if(des.annotationType != null) {
+				dependency.remove(des.annotationType);
+			}
+		}
+		
+		builder.clean(descs);
 		this.builders.remove(builder);
+		
+		descs.clear();
 	}
 
 	public void purgeDependency(Describer describer) {

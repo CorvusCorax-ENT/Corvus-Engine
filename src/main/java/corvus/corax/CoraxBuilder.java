@@ -63,7 +63,7 @@ public abstract class CoraxBuilder {
 		defaultScope = null;
 	}
 	
-	protected void clean() {
+	protected void clean(ArrayList<Describer> descs) {
 		if(describers != null)
 			describers.clear();
 
