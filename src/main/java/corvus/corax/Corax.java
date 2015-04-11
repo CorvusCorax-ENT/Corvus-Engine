@@ -261,19 +261,6 @@ public class Corax {
 			purgeDependency(desc);
 		}
 		
-		for (int i = 0; i < builder.describers.size(); i++) {
-			Describer des = builder.describers.get(i);
-			
-			if(des.key != null)
-				continue;
-			else if(des.annotation != null) {
-				dependency.remove(des.annotation);
-			}
-			else if(des.annotationType != null) {
-				dependency.remove(des.annotationType);
-			}
-		}
-		
 		builder.clean(descs);
 		this.builders.remove(builder);
 		
