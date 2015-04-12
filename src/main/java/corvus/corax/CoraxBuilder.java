@@ -30,11 +30,9 @@
 package corvus.corax;
 
 import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
 import java.util.ArrayList;
 
 import corvus.corax.annotation.Singleton;
-import corvus.corax.util.ReflectUtils;
 
 /**
  * @author Vlad
@@ -106,16 +104,27 @@ public abstract class CoraxBuilder {
 				describer.scope = Scope.Default;
 
 			try {
-				if(ReflectUtils.annotationPresent(null, Singleton.class, ElementType.TYPE, describer.key) ||
-						ReflectUtils.annotationPresent(null, Singleton.class, ElementType.TYPE, describer.target)) {
+				if(describer.key != null) {
+					Singleton anon = null;
 					
-					describer.scope = Scope.Singleton;
+					if(describer.key.isAnnotationPresent(Singleton.class)) {
+						anon = describer.key.getAnnotation(Singleton.class);
+					}
+					else if(describer.target.isAnnotationPresent(Singleton.class)) {
+						anon = describer.target.getAnnotation(Singleton.class);
+					}
+					
+					if(anon != null) {
+						describer.key.isAnnotationPresent(Singleton.class);
+						describer.scope = anon.eager() ? Scope.EagerSingleton : Scope.Singleton;
+					}
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			
 			describers.add(describer);
+			describer = null;
 		}
 	}
 	
@@ -140,12 +149,24 @@ public abstract class CoraxBuilder {
 		return this;
 	}
 
+	public CoraxBuilder bindConstant(Object cons) {
+		completePreviousBind();
+		
+		describer = new Describer(this, null, null, defaultScope != null ? defaultScope : Scope.Default);
+		describer.value = cons;
+		return this;
+	}
+	
+	/**
+	 * This method dose not bind! Calling it before a bind was completed will throw a {@link RuntimeException}
+	 * @param cons
+	 * @return
+	 */
 	public CoraxBuilder constant(Object cons) {
-		if(describer != null && describer.key.isInstance(cons))
+		if(describer != null && (describer.key != null && describer.key.isInstance(cons)))
 			describer.value = cons;
-		else {
-			describer = new Describer(this, null, null, defaultScope != null ? defaultScope : Scope.Default);
-			describer.value = cons;
+		else if(describer.key == null) {
+			throw new RuntimeException("constant() was called on a non completed bind!");
 		}
 
 		return this;

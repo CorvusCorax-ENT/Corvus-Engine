@@ -48,7 +48,7 @@ public class MainTest {
 			
 			@Override
 			protected void build(Corax corax) {
-				constant("Hello World!").annotatedWith(Names.named("hello"));
+				bindConstant("Hello World!").annotatedWith(Names.named("hello"));
 				bind(MainTest.class);
 				bind(Test.class).to(TestImpl.class);
 			}
