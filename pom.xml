@@ -9,7 +9,7 @@
 		<finalName>${project.artifactId}-${project.version}</finalName>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<testSourceDirectory>src/tests/java</testSourceDirectory>
-		<defaultGoal>clean compile package</defaultGoal>
+		<defaultGoal>clean compile package install</defaultGoal>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
