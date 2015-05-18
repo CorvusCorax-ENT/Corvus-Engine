@@ -163,8 +163,10 @@ public abstract class CoraxBuilder {
 	 * @return
 	 */
 	public CoraxBuilder constant(Object cons) {
-		if(describer != null && (describer.key != null && describer.key.isInstance(cons)))
+		if(describer != null && (describer.key != null && describer.key.isInstance(cons))) {
 			describer.value = cons;
+			describer.scope = Scope.Singleton;
+		}
 		else if(describer.key == null) {
 			throw new RuntimeException("constant() was called on a non completed bind!");
 		}
